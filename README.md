@@ -11,15 +11,23 @@ The Worker is designed for clients that always send `Authorization`. When the cl
 
 ## Configuration
 
-Set these Worker vars in `wrangler.jsonc` or your Cloudflare environment:
+This project intentionally does not commit account-specific Worker vars in `wrangler.jsonc`.
 
-```json
-{
-  "CF_ACCOUNT_ID": "your-cloudflare-account-id",
-  "CF_GATEWAY_ID": "default",
-  "UPSTREAM_TIMEOUT_MS": "60000"
-}
+For local development, create a private `.dev.vars` file from the example:
+
+```sh
+cp .dev.vars.example .dev.vars
 ```
+
+Then edit `.dev.vars`:
+
+```dotenv
+CF_ACCOUNT_ID="your-cloudflare-account-id"
+CF_GATEWAY_ID="default"
+UPSTREAM_TIMEOUT_MS="60000"
+```
+
+For deployed Workers, set these as Worker environment variables in the Cloudflare dashboard or your deployment automation. `CF_ACCOUNT_ID` and `CF_GATEWAY_ID` are required. `UPSTREAM_TIMEOUT_MS` is optional and defaults to `60000`.
 
 This Worker does not store or inject provider API keys or AI Gateway tokens. Clients must send `cf-aig-authorization`.
 
@@ -55,7 +63,7 @@ npm run build
 
 ## Deploy
 
-Update `wrangler.jsonc` with the correct `CF_ACCOUNT_ID` and `CF_GATEWAY_ID`, then run:
+Set `CF_ACCOUNT_ID` and `CF_GATEWAY_ID` for the target Worker environment, then run:
 
 ```sh
 npm run deploy

@@ -2,10 +2,5 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cloudflare-aig-byok-proxy",
   "main": "src/index.ts",
-  "compatibility_date": "2026-05-03",
-  "vars": {
-    "CF_ACCOUNT_ID": "replace-with-account-id",
-    "CF_GATEWAY_ID": "default",
-    "UPSTREAM_TIMEOUT_MS": "60000"
-  }
+  "compatibility_date": "2026-05-03"
 }
