@@ -25,7 +25,7 @@ function validBody(): unknown {
   };
 }
 
-async function readJson(resp: Response): Promise<any> {
+async function readJson(resp: Response): Promise<unknown> {
   return resp.json();
 }
 
@@ -59,6 +59,7 @@ describe("Cloudflare AI Gateway BYOK proxy", () => {
     const resp = await worker.fetch(new Request("https://proxy.example.com/healthz"), {
       CF_ACCOUNT_ID: "",
       CF_GATEWAY_ID: "",
+      UPSTREAM_TIMEOUT_MS: "1000",
     });
 
     expect(resp.status).toBe(500);
@@ -274,6 +275,7 @@ describe("Cloudflare AI Gateway BYOK proxy", () => {
       {
         CF_ACCOUNT_ID: "account-123",
         CF_GATEWAY_ID: "",
+        UPSTREAM_TIMEOUT_MS: "1000",
       },
     );
 

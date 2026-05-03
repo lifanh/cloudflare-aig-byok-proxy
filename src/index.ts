@@ -1,8 +1,6 @@
-export interface Env {
-  CF_ACCOUNT_ID: string;
-  CF_GATEWAY_ID: string;
-  UPSTREAM_TIMEOUT_MS?: string;
-}
+import { env as cloudflareEnv } from "cloudflare:workers";
+
+export type Env = Cloudflare.Env;
 
 const SKIP_AUTH_HEADER = "x-aig-skip-provider-authorization";
 const AIG_AUTH_HEADER = "cf-aig-authorization";
@@ -202,7 +200,7 @@ async function handleChat(req: Request, env: Env): Promise<Response> {
 }
 
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env = cloudflareEnv): Promise<Response> {
     const url = new URL(req.url);
 
     if (req.method === "GET" && url.pathname === "/healthz") {
@@ -225,4 +223,4 @@ export default {
 
     return errorResponse("Not found", 404);
   },
-};
+} satisfies ExportedHandler<Env>;
