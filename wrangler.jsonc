@@ -2,5 +2,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cloudflare-aig-byok-proxy",
   "main": "src/index.ts",
-  "compatibility_date": "2026-05-03"
+  "compatibility_date": "2026-05-03",
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    }
+  },
 }
