@@ -1,8 +1,8 @@
 # Cloudflare AI Gateway BYOK Authorization-Strip Proxy
 
-A minimal Cloudflare Worker that exposes an OpenAI-compatible chat completions endpoint and forwards requests to Cloudflare AI Gateway.
+A minimal Cloudflare Worker that exposes an OpenAI-compatible endpoint to forward requests to Cloudflare AI Gateway, featuring a custom header to strip provider `Authorization` header and seamlessly enable BYOK (Bring Your Own Key) mode for clients that mandatorily send API keys.
 
-The Worker is designed for clients that always send `Authorization`. When the client opts in with `x-aig-skip-provider-authorization: true`, the Worker removes provider `Authorization` before forwarding so AI Gateway BYOK can use the stored provider key. The Worker always preserves client-supplied `cf-aig-authorization`.
+Specifically, when a request includes `x-aig-skip-provider-authorization: true`, the proxy drops the standard `Authorization` payload prior to upstream routing. This prevents the client's mandatory or dummy token from overriding the secure credentials managed by AI Gateway. The `cf-aig-authorization` header is always kept intact to authenticate against the gateway itself, and without the skip directive, the proxy falls back to acting as a standard, transparent pass-through.
 
 ## Endpoints
 
