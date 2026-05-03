@@ -29,6 +29,8 @@ UPSTREAM_TIMEOUT_MS="60000"
 
 For deployed Workers, set these as Worker environment variables in the Cloudflare dashboard or your deployment automation. `CF_ACCOUNT_ID` and `CF_GATEWAY_ID` are required. `UPSTREAM_TIMEOUT_MS` is optional and defaults to `60000`.
 
+The Wrangler config sets `keep_vars: true` so `npm run deploy` preserves variables configured in the Cloudflare dashboard. Without this, a Wrangler deploy with no committed `vars` can remove dashboard-defined Worker variables from the deployed version.
+
 This Worker does not store or inject provider API keys or AI Gateway tokens. Clients must send `cf-aig-authorization`.
 
 ## Header Contract
@@ -68,6 +70,14 @@ Set `CF_ACCOUNT_ID` and `CF_GATEWAY_ID` for the target Worker environment, then 
 ```sh
 npm run deploy
 ```
+
+After deploy, check the runtime configuration without exposing values:
+
+```sh
+curl "https://<worker-host>/healthz"
+```
+
+A configured Worker returns `{"ok":true,"configured":true}`. If Cloudflare did not bind the variables to that deployed Worker version, the endpoint returns the missing variable names.
 
 ## BYOK Strip Mode Example
 

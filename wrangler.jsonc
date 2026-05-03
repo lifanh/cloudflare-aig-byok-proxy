@@ -3,6 +3,7 @@
   "name": "cloudflare-aig-byok-proxy",
   "main": "src/index.ts",
   "compatibility_date": "2026-05-03",
+  "keep_vars": true,
   "observability": {
     "logs": {
       "enabled": true,

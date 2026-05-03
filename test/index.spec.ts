@@ -51,7 +51,22 @@ describe("Cloudflare AI Gateway BYOK proxy", () => {
     const resp = await worker.fetch(new Request("https://proxy.example.com/healthz"), env);
 
     expect(resp.status).toBe(200);
-    expect(await readJson(resp)).toEqual({ ok: true });
+    expect(await readJson(resp)).toEqual({ ok: true, configured: true });
+    expect(upstreamFetch).not.toHaveBeenCalled();
+  });
+
+  it("reports missing runtime configuration on health checks", async () => {
+    const resp = await worker.fetch(new Request("https://proxy.example.com/healthz"), {
+      CF_ACCOUNT_ID: "",
+      CF_GATEWAY_ID: "",
+    });
+
+    expect(resp.status).toBe(500);
+    expect(await readJson(resp)).toEqual({
+      ok: false,
+      configured: false,
+      missing: ["CF_ACCOUNT_ID", "CF_GATEWAY_ID"],
+    });
     expect(upstreamFetch).not.toHaveBeenCalled();
   });
 
@@ -251,6 +266,25 @@ describe("Cloudflare AI Gateway BYOK proxy", () => {
         type: "api_connection_error",
       },
     });
+  });
+
+  it("reports missing runtime configuration without exposing values", async () => {
+    const resp = await worker.fetch(
+      jsonRequest({ "cf-aig-authorization": "Bearer gateway-token" }),
+      {
+        CF_ACCOUNT_ID: "account-123",
+        CF_GATEWAY_ID: "",
+      },
+    );
+
+    expect(resp.status).toBe(500);
+    expect(await readJson(resp)).toEqual({
+      error: {
+        message: "Worker is missing required Cloudflare AI Gateway configuration: CF_GATEWAY_ID",
+        type: "server_error",
+      },
+    });
+    expect(upstreamFetch).not.toHaveBeenCalled();
   });
 
   it("returns 504 for upstream abort failures", async () => {

@@ -37,8 +37,22 @@ function isTruthyHeader(value: string | null): boolean {
   return ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
 }
 
+function missingConfigVars(env: Env): string[] {
+  const missing: string[] = [];
+
+  if (!env.CF_ACCOUNT_ID) {
+    missing.push("CF_ACCOUNT_ID");
+  }
+
+  if (!env.CF_GATEWAY_ID) {
+    missing.push("CF_GATEWAY_ID");
+  }
+
+  return missing;
+}
+
 function buildGatewayUrl(env: Env): string {
-  if (!env.CF_ACCOUNT_ID || !env.CF_GATEWAY_ID) {
+  if (missingConfigVars(env).length > 0) {
     throw new Error("Missing CF_ACCOUNT_ID or CF_GATEWAY_ID");
   }
 
@@ -150,7 +164,9 @@ async function handleChat(req: Request, env: Env): Promise<Response> {
   try {
     upstreamUrl = buildGatewayUrl(env);
   } catch {
-    return errorResponse("Worker is missing required Cloudflare AI Gateway configuration", 500, "server_error");
+    const missing = missingConfigVars(env);
+    const suffix = missing.length > 0 ? `: ${missing.join(", ")}` : "";
+    return errorResponse(`Worker is missing required Cloudflare AI Gateway configuration${suffix}`, 500, "server_error");
   }
 
   const timeoutMs = Number(env.UPSTREAM_TIMEOUT_MS ?? "60000");
@@ -190,7 +206,13 @@ export default {
     const url = new URL(req.url);
 
     if (req.method === "GET" && url.pathname === "/healthz") {
-      return jsonResponse({ ok: true });
+      const missing = missingConfigVars(env);
+
+      if (missing.length > 0) {
+        return jsonResponse({ ok: false, configured: false, missing }, 500);
+      }
+
+      return jsonResponse({ ok: true, configured: true });
     }
 
     if (url.pathname === "/v1/chat/completions") {
