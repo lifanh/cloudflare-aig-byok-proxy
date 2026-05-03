@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
+  "license": "MIT",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260420.1",
     "@types/node": "^25.6.0",
