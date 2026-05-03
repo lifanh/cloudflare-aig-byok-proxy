@@ -90,9 +90,31 @@ function buildOutboundHeaders(req: Request): Headers | Response {
     outbound.delete("authorization");
   }
 
+  outbound.set("accept-encoding", "identity");
   outbound.set("content-type", "application/json");
 
   return outbound;
+}
+
+function normalizeUpstreamResponse(upstreamResp: Response): {
+  body: ReadableStream<Uint8Array> | null;
+  headers: Headers;
+} {
+  const headers = new Headers(upstreamResp.headers);
+  const contentEncoding = headers.get("content-encoding")?.trim().toLowerCase() ?? null;
+
+  if (contentEncoding) {
+    headers.delete("content-encoding");
+    headers.delete("content-length");
+  }
+
+  headers.delete("transfer-encoding");
+  headers.set("cache-control", "no-store");
+
+  return {
+    body: upstreamResp.body,
+    headers,
+  };
 }
 
 async function parseJson(req: Request): Promise<unknown | Response> {
@@ -143,13 +165,12 @@ async function handleChat(req: Request, env: Env): Promise<Response> {
       signal: controller.signal,
     });
 
-    const respHeaders = new Headers(upstreamResp.headers);
-    respHeaders.set("cache-control", "no-store");
+    const normalizedResp = normalizeUpstreamResponse(upstreamResp);
 
-    return new Response(upstreamResp.body, {
+    return new Response(normalizedResp.body, {
       status: upstreamResp.status,
       statusText: upstreamResp.statusText,
-      headers: respHeaders,
+      headers: normalizedResp.headers,
     });
   } catch (err) {
     const isAbort = err instanceof DOMException && err.name === "AbortError";

@@ -171,6 +171,7 @@ describe("Cloudflare AI Gateway BYOK proxy", () => {
     expect(headers.get("authorization")).toBeNull();
     expect(headers.get("cf-aig-authorization")).toBe("Bearer gateway-token");
     expect(headers.get("cf-aig-byok-alias")).toBe("production");
+    expect(headers.get("accept-encoding")).toBe("identity");
     expect(headers.get("x-aig-skip-provider-authorization")).toBeNull();
     expect(JSON.parse(String(init.body))).toEqual(validBody());
   });
@@ -208,6 +209,31 @@ describe("Cloudflare AI Gateway BYOK proxy", () => {
     expect(resp.headers.get("x-request-id")).toBe("req_123");
     expect(resp.headers.get("cache-control")).toBe("no-store");
     expect(await readJson(resp)).toEqual({ error: { message: "rate limited" } });
+  });
+
+  it("removes stale upstream compression headers from decoded response bodies", async () => {
+    const upstreamBody = JSON.stringify({ id: "chatcmpl_gzip" });
+    upstreamFetch.mockResolvedValueOnce(
+      new Response(upstreamBody, {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+          "content-encoding": "gzip",
+          "content-length": "999",
+          "transfer-encoding": "chunked",
+        },
+      }),
+    );
+
+    const resp = await worker.fetch(
+      jsonRequest({ "cf-aig-authorization": "Bearer gateway-token" }),
+      env,
+    );
+
+    expect(resp.status).toBe(200);
+    expect(resp.headers.get("content-encoding")).toBeNull();
+    expect(resp.headers.get("content-length")).toBeNull();
+    expect(await resp.text()).toBe(upstreamBody);
   });
 
   it("returns 502 for upstream fetch failures", async () => {
